@@ -1,0 +1,138 @@
+
+Маріо не проходить крізь перешкоди і отримує суперсилу
+// Змінні для зображень анімації
+let walk1, walk2;
+let currentFrame = 0; // Поточний кадр анімації
+
+// Змінні для позиції зображення
+let x, y;
+let speed = 5;
+
+// Змінні для суперсили
+let superPowerActive = false;
+let powerUpX = 500;
+let powerUpY = 300;
+let powerUpSize = 50;
+
+// Змінні для перешкод
+let obstacle1 = { x: 200, y: 350, w: 100, h: 200 };
+let obstacle2 = { x: 700, y: 400, w: 150, h: 150 };
+
+// Ця функція завантажує зображення перед запуском програми.
+function preload() {
+  walk1 = loadImage('https://upload.wikimedia.org/wikipedia/ru/1/15/Mario2small.jpg');
+  walk2 = loadImage('https://static.wikia.nocookie.net/chaikelpedia/images/2/25/Mario_New_Super_Mario_Bros_U_Deluxe.png/revision/latest/thumbnail/width/360/height/360?cb=20190822024538');
+}
+
+// Ця функція запускається один раз на початку
+function setup() {
+  // Створюємо 2D-полотно
+  createCanvas(windowWidth, windowHeight);
+  // Встановлюємо початкову позицію зображення
+  x = windowWidth / 2;
+  // Встановлюємо початкову позицію y так, щоб персонаж стояв на газоні
+  y = height - 250;
+}
+
+// Ця функція запускається багато разів на секунду
+function draw() {
+  // Заповнюємо фон блакитним кольором (небо)
+  background(135, 206, 235);
+
+  // Малюємо газон зеленим кольором
+  fill(0, 150, 0); // Зелений колір
+  rect(0, height - 100, width, 100); // Прямокутник внизу екрана
+
+  // Малюємо предмет суперсили, якщо він ще не підібраний
+  if (!superPowerActive) {
+    fill(0, 255, 0); // Зелений колір
+    ellipse(powerUpX, powerUpY, powerUpSize, powerUpSize);
+  }
+
+  // Малюємо перешкоди
+  fill(255, 0, 0); // Червоний колір
+  rect(obstacle1.x, obstacle1.y, obstacle1.w, obstacle1.h);
+  rect(obstacle2.x, obstacle2.y, obstacle2.w, obstacle2.h);
+
+  // Перевіряємо зіткнення
+  checkCollision();
+
+  // Логіка руху зображення за допомогою клавіш
+  let currentSpeed = speed;
+  if (superPowerActive) {
+    currentSpeed = speed * 2; // Збільшуємо швидкість
+  }
+
+  // Зберігаємо стару позицію для відкату, якщо відбудеться зіткнення
+  let oldX = x;
+  let oldY = y;
+
+  // Логіка руху
+  if (keyIsDown(LEFT_ARROW)) {
+    x -= currentSpeed;
+    currentFrame += 0.2;
+  }
+  if (keyIsDown(RIGHT_ARROW)) {
+    x += currentSpeed;
+    currentFrame += 0.2;
+  }
+  if (keyIsDown(UP_ARROW)) {
+    y -= currentSpeed;
+    currentFrame += 0.2;
+  }
+  if (keyIsDown(DOWN_ARROW)) {
+    y += currentSpeed;
+    currentFrame += 0.2;
+  }
+
+  // Перевіряємо, чи персонаж вийшов за межі екрана або зіткнувся з перешкодою
+  if (x < 0 || x + 150 > width || y < 0 || y + 150 > height - 100 || checkObstacleCollision()) {
+    // Якщо так, повертаємо його на стару позицію
+    x = oldX;
+    y = oldY;
+  }
+
+  // Вибираємо зображення залежно від поточного кадру
+  if (abs(round(currentFrame) % 2) === 0) {
+    image(walk1, x, y, 150, 150);
+  } else {
+    image(walk2, x, y, 150, 150);
+  }
+}
+
+// Перевіряє, чи персонаж торкнувся предмета або перешкоди
+function checkCollision() {
+  // Перевірка зіткнення з суперсилою
+  if (!superPowerActive) {
+    let d = dist(x + 75, y + 75, powerUpX, powerUpY);
+    if (d < 50) {
+      superPowerActive = true;
+    }
+  }
+}
+
+// Перевіряє зіткнення з перешкодами
+function checkObstacleCollision() {
+  // Змінні для персонажа
+  let charLeft = x;
+  let charRight = x + 150;
+  let charTop = y;
+  let charBottom = y + 150;
+
+  // Перевірка зіткнення з перешкодою 1
+  if (charRight > obstacle1.x && charLeft < obstacle1.x + obstacle1.w && charBottom > obstacle1.y && charTop < obstacle1.y + obstacle1.h) {
+    return true;
+  }
+
+  // Перевірка зіткнення з перешкодою 2
+  if (charRight > obstacle2.x && charLeft < obstacle2.x + obstacle2.w && charBottom > obstacle2.y && charTop < obstacle2.y + obstacle2.h) {
+    return true;
+  }
+
+  return false;
+}
+
+// Це важливо для адаптації, щоб полотно займало весь екран
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
